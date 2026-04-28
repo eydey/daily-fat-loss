@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Fat Loss — Day Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&family=Instrument+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2eb;
+  --surface: #ffffff;
+  --surface2: #edeae2;
+  --border: #dedad0;
+  --ink: #1a1814;
+  --ink2: #5a5650;
+  --ink3: #9a9690;
+  --accent: #c8401a;
+  --accent2: #1a6cc8;
+  --accent3: #2a8a4a;
+  --accent-light: rgba(200,64,26,0.08);
+  --radius: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+.topbar-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.topbar-day {
+  font-family: 'Instrument Mono', monospace;
+  font-size: 12px;
+  opacity: 0.6;
+}
+.topbar-prog {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.prog-track {
+  width: 80px;
+  height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+/* ── DATE STRIP ── */
+.date-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.date-strip::-webkit-scrollbar { display: none; }
+.date-chip {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  min-width: 44px;
+  position: relative;
+}
+.date-chip:hover { background: var(--surface2); }
+.date-chip.active { border-bottom-color: var(--accent); }
+.date-chip .dc-day { font-family: 'Instrument Mono', monospace; font-size: 9px; text-transform: uppercase; color: var(--ink3); letter-spacing: 0.1em; }
+.date-chip .dc-num { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: var(--ink2); margin: 2px 0; }
+.date-chip.active .dc-num { color: var(--accent); }
+.date-chip.done-chip::after {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--accent3);
+  border-radius: 50%;
+  position: absolute;
+  bottom: 14px;
+}
+.date-chip.today-chip .dc-day { color: var(--accent2); }
+.date-chip.missed-chip .dc-num { color: #bbb; }
+.date-chip.missed-chip .dc-day { color: #ccc; }
+.date-chip.missed-chip::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: #ccc;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 14px;
+}
+.badge-missed { background: rgba(90,86,80,0.08); color: var(--ink3); }
+
+/* ── HERO ── */
+.day-hero {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--border);
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.day-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Instrument Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.badge-strength { background: rgba(200,64,26,0.1); color: var(--accent); }
+.badge-cardio   { background: rgba(26,108,200,0.1); color: var(--accent2); }
+.badge-rest     { background: rgba(90,86,80,0.1); color: var(--ink2); }
+.day-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(30px, 7vw, 44px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.day-subtitle { font-size: 14px; color: var(--ink2); }
+.day-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.meta-pill {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+}
+.meta-pill strong { display: block; font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; line-height: 1.1; }
+.meta-pill span { color: var(--ink3); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'Instrument Mono', monospace; }
+
+/* ── CONTENT ── */
+.content { padding: 20px; max-width: 640px; margin: 0 auto; }
+
+/* ── CHECKLIST SECTIONS ── */
+.check-section { margin-bottom: 24px; }
+.check-section-label {
+  font-family: 'Instrument Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.check-section-label .cs-count { color: var(--accent3); }
+.check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.check-item:hover { border-color: #c8c4b8; }
+.check-item.checked {
+  background: var(--surface2);
+  border-color: var(--border);
+}
+.check-item.checked .ci-title { text-decoration: line-through; color: var(--ink3); }
+.ci-box {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  font-size: 11px;
+}
+.check-item.checked .ci-box {
+  background: var(--accent3);
+  border-color: var(--accent3);
+  color: white;
+}
+.ci-content { flex: 1; }
+.ci-title { font-size: 14px; font-weight: 500; margin-bottom: 2px; line-height: 1.3; }
+.ci-detail { font-size: 12px; color: var(--ink3); line-height: 1.4; }
+.ci-tag {
+  flex-shrink: 0;
+  font-family: 'Instrument Mono', monospace;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--surface2);
+  color: var(--ink3);
+  margin-top: 2px;
+  white-space: nowrap;
+}
+
+/* ── EXERCISE DETAIL ── */
+.ex-expand {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 7px;
+  overflow: hidden;
+}
+.ex-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+.ex-header:hover { background: var(--surface2); }
+.ex-num-badge {
+  width: 28px; height: 28px;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.ex-hcontent { flex: 1; }
+.ex-hname { font-size: 14px; font-weight: 600; }
+.ex-hsets { font-family: 'Instrument Mono', monospace; font-size: 11px; color: var(--ink3); }
+.ex-arrow { font-size: 11px; color: var(--ink3); transition: transform 0.2s; }
+.ex-expand.open .ex-arrow { transform: rotate(180deg); }
+.ex-body {
+  display: none;
+  padding: 0 14px 14px 54px;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.ex-expand.open .ex-body { display: block; }
+.ex-done-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.set-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface2);
+  font-family: 'Instrument Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--ink2);
+}
+.set-btn.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ── MEAL CARD ── */
+.meal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 7px;
+}
+.meal-time {
+  font-family: 'Instrument Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 6px;
+}
+.meal-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.meal-desc { font-size: 12px; color: var(--ink2); margin-bottom: 8px; line-height: 1.5; }
+.meal-macros-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.mmacro {
+  font-family: 'Instrument Mono', monospace;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--surface2);
+  color: var(--ink2);
+}
+.mmacro.prot { background: rgba(200,64,26,0.08); color: var(--accent); }
+
+/* ── DAILY TOTALS ── */
+.totals-bar {
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.total-item { text-align: center; }
+.total-val { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; line-height: 1; }
+.total-lbl { font-family: 'Instrument Mono', monospace; font-size: 9px; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px; }
+
+/* ── WARNING / TIP ── */
+.warn-box {
+  background: rgba(200,64,26,0.07);
+  border: 1px solid rgba(200,64,26,0.2);
+  border-radius: var(--radius);
+  padding: 13px 14px;
+  font-size: 13px;
+  color: #8a2800;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 9px;
+  line-height: 1.5;
+}
+.tip-box {
+  background: rgba(42,138,74,0.07);
+  border: 1px solid rgba(42,138,74,0.2);
+  border-radius: var(--radius);
+  padding: 13px 14px;
+  font-size: 13px;
+  color: #1a5a34;
+  margin-bottom: 14px;
+  display: flex;
+  gap: 9px;
+  line-height: 1.5;
+}
+
+/* ── COMPLETE DAY BTN ── */
+.complete-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+.complete-btn:hover { background: var(--accent); }
+.complete-btn.completed { background: var(--accent3); cursor: default; }
+
+/* ── WEEK PROGRESS ── */
+.week-progress {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.wp-title { font-family: 'Instrument Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 12px; }
+.wp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.wp-day {
+  aspect-ratio: 1;
+  border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Mono', monospace;
+  font-size: 10px;
+  color: var(--ink3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wp-day.done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.wp-day.today { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.wp-day.future { opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">Fat Loss Protocol</div>
+  <div class="topbar-prog">
+    <div class="topbar-day" id="topbarDay">Day 1 of 56</div>
+    <div class="prog-track"><div class="prog-fill" id="topProg" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="date-strip" id="dateStrip"></div>
+
+<div id="dayView"></div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────────────────
+
+const PROGRAM = {
+  calories: 2050,
+  protein: 155,
+  carbs: 230,
+  fat: 57,
+};
+
+// 56-day schedule (8 weeks × 7 days)
+// Types: S=Strength A, B=Strength B, C=Cardio, R=Rest, W=Walk+Recovery
+const SCHEDULE = [
+  // Wk1
+  'S','C','R','B','C','W','R',
+  // Wk2
+  'S','C','R','B','C','W','R',
+  // Wk3
+  'S','C','R','B','C','W','R',
+  // Wk4
+  'S','C','R','B','C','W','R',
+  // Wk5
+  'S','C','R','B','C','W','R',
+  // Wk6
+  'S','C','R','B','C','W','R',
+  // Wk7
+  'S','C','R','B','C','W','R',
+  // Wk8
+  'S','C','R','B','C','W','R',
+];
+
+const WORKOUTS = {
+  S: {
+    label: 'Strength A',
+    color: 'badge-strength',
+    icon: '🏋️',
+    duration: '35–40 min',
+    subtitle: 'Full body — compound movements first',
+    exercises: [
+      { name: 'Goblet Squat', sets: '3 × 10–12', detail: 'Hold dumbbell at chest. Squat until thighs parallel. Knees track over toes. Rest 60s between sets.', setCount: 3 },
+      { name: 'Push-ups or DB Bench Press', sets: '3 × 10–12', detail: 'Full range of motion. If push-ups are easy, elevate feet. If using DB, control the descent (2 seconds down). Rest 60s.', setCount: 3 },
+      { name: 'Dumbbell Row', sets: '3 × 10 each side', detail: 'One arm on bench. Pull elbow back, not out. Squeeze at top. This hits your back — biggest upper-body muscle group. Rest 60s.', setCount: 3 },
+      { name: 'Romanian Deadlift', sets: '3 × 10', detail: 'Hinge at hips, slight bend in knees. Bar/DBs stay close to legs. You\'ll feel hamstrings stretch. If lower back aches, reduce weight. Rest 90s.', setCount: 3 },
+      { name: 'Plank', sets: '3 × 30–45s', detail: 'Forearms or hands. Don\'t let hips sag or rise. Breathe. If 45s is easy, add a shoulder tap. Rest 45s.', setCount: 3 },
+    ]
+  },
+  B: {
+    label: 'Strength B',
+    color: 'badge-strength',
+    icon: '💪',
+    duration: '35–40 min',
+    subtitle: 'Full body — different angles from Workout A',
+    exercises: [
+      { name: 'Step-ups or Split Squat', sets: '3 × 10 each leg', detail: 'Step onto a sturdy chair or box. Drive through the heel. Lower slowly. Lower impact than barbell squats — good for joints. Rest 60s.', setCount: 3 },
+      { name: 'Overhead DB Press', sets: '3 × 10–12', detail: 'Seated for stability if back is an issue. Press straight up, don\'t flare elbows excessively. Lower to ear level. Rest 60s.', setCount: 3 },
+      { name: 'Lat Pulldown or Resistance Band Pull', sets: '3 × 10–12', detail: 'No cable? Loop resistance band over door. Pull elbows to ribs. Feel lats, not biceps. Rest 60s.', setCount: 3 },
+      { name: 'Hip Thrust / Glute Bridge', sets: '3 × 12', detail: 'Upper back on bench or floor. DB on hips. Drive hips up — squeeze hard at top. Glutes are your largest muscle. Don\'t skip this. Rest 60s.', setCount: 3 },
+      { name: 'Dead Bug', sets: '3 × 8 each side', detail: 'Lie on back. Arms up, knees bent 90°. Slowly lower opposite arm+leg to floor. Lower back stays pressed down. Slower = harder. Rest 45s.', setCount: 3 },
+    ]
+  },
+  C: {
+    label: 'Cardio',
+    color: 'badge-cardio',
+    icon: '🏃',
+    duration: '20–35 min',
+    subtitle: 'Burn calories, protect your heart',
+    options: [
+      { name: 'HIIT (20–25 min)', detail: '5 min warmup walk → 8 rounds: 30s hard effort (sprint, bike, jump rope) + 60s rest → 5 min cooldown. Hard = can\'t hold conversation.' },
+      { name: 'Brisk Walk (35 min)', detail: 'Fast enough that talking is slightly hard. Arms swinging. Good option if legs are sore from yesterday\'s strength session.' },
+      { name: 'Cycling or Swimming (30 min)', detail: 'Steady moderate intensity. Joint-friendly. Good choice if knees or ankles are bothering you.' },
+    ]
+  },
+  W: {
+    label: 'Active Recovery',
+    color: 'badge-cardio',
+    icon: '🚶',
+    duration: '40–60 min',
+    subtitle: 'Low-intensity movement — do not skip',
+    tip: 'This is not optional. NEAT (non-exercise activity thermogenesis) from daily walking contributes significantly to fat loss — studies show up to 300 extra cal/day vs. being sedentary. A 45-min Saturday walk is worth it.',
+    options: [
+      { name: '45-min walk outdoors', detail: 'Conversational pace. No phone staring — walk with purpose. Earphones fine.' },
+      { name: 'Yoga or mobility work (30 min)', detail: 'Hip flexors, hamstrings, shoulders. YouTube: search "30 min yoga for men" or "mobility for desk workers."' },
+    ]
+  },
+  R: {
+    label: 'Rest Day',
+    color: 'badge-rest',
+    icon: '💤',
+    duration: 'Full rest',
+    subtitle: 'Recovery is when adaptation happens — not the gym',
+  }
+};
+
+const MEALS = [
+  {
+    time: 'Breakfast',
+    name: 'Eggs + Cottage Cheese',
+    desc: '4 scrambled eggs + 1 cup (225g) low-fat cottage cheese. Add hot sauce. Takes 5 min.',
+    alt: 'Or: 1 cup Greek yogurt + 1 scoop whey protein + ½ cup berries + 15 walnuts.',
+    cal: 480, protein: 42, carbs: 12, fat: 26,
+  },
+  {
+    time: 'Lunch',
+    name: 'Chicken + Sweet Potato + Salad',
+    desc: '200g grilled chicken breast + 1 medium sweet potato + large salad with 1 tbsp olive oil + lemon.',
+    alt: 'Or: Tuna/salmon (180g can) + ½ cup brown rice + sliced cucumber + avocado.',
+    cal: 560, protein: 46, carbs: 52, fat: 14,
+  },
+  {
+    time: 'Snack',
+    name: 'Protein Shake + Fruit',
+    desc: '1 scoop whey protein in water + 1 medium apple.',
+    alt: 'Or: 28g almonds + 1 string cheese stick.',
+    cal: 240, protein: 28, carbs: 30, fat: 4,
+  },
+  {
+    time: 'Dinner',
+    name: 'Salmon + Veg + Quinoa',
+    desc: '200g baked salmon + 2 cups roasted broccoli/asparagus + ½ cup quinoa.',
+    alt: 'Or: 200g lean beef/chicken thighs + stir-fried veg (no heavy sauce) + ½ cup lentils.',
+    cal: 580, protein: 44, carbs: 42, fat: 22,
+  },
+  {
+    time: 'Evening Snack (optional)',
+    name: 'Cottage Cheese or Casein',
+    desc: '½ cup cottage cheese. Slow-digesting protein — good before bed for muscle preservation overnight.',
+    alt: 'Or: casein protein shake.',
+    cal: 100, protein: 14, carbs: 6, fat: 2,
+  },
+];
+
+const DAILY_HABITS = [
+  { title: 'Log breakfast in MyFitnessPal or Cronometer', detail: 'Use a food scale — cups are inaccurate. People underestimate calories by 20–40%.' },
+  { title: 'Drink 3+ liters of water', detail: 'Thirst is often confused for hunger. Hydration also supports performance and recovery.' },
+  { title: 'Get 7–9 hours of sleep tonight', detail: 'Under 6 hrs raises cortisol and directs fat loss toward muscle instead. Not negotiable.' },
+  { title: 'Track your meals for the day', detail: 'Hit 155g protein. Everything else adjusts around that number.' },
+  { title: 'Take 1,000–2,000 IU Vitamin D (if not getting sun)', detail: 'Most men 46+ are deficient. Low Vitamin D correlates with lower testosterone and energy.' },
+];
+
+const WEEKLY_CHECK = [
+  { title: 'Weigh yourself (average 3 readings this week)', detail: 'Sunday morning, fasted, after using bathroom. Same conditions every week.' },
+  { title: 'Measure waist circumference', detail: 'At navel level, exhale normally before measuring. This matters more than scale weight.' },
+  { title: 'Measure neck circumference', detail: 'At Adam\'s apple level.' },
+  { title: 'Take a progress photo', detail: 'Same lighting, same pose, same time. You won\'t see changes day-to-day — the weekly comparison is the signal.' },
+  { title: 'Adjust calories if needed', detail: 'Lost < 0.5 lbs this week? Drop 100 cal. Lost > 1.5 lbs? Add 150 cal — you may be burning muscle.' },
+];
+
+// ── STATE (cookie-based — works on Safari iOS local files) ───────────────────
+
+function getState() {
+  try {
+    const match = document.cookie.match(/(?:^|; )flp_state=([^;]*)/);
+    return match ? JSON.parse(decodeURIComponent(match[1])) : {};
+  } catch(e) { return {}; }
+}
+function saveState(s) {
+  try {
+    const exp = new Date(Date.now() + 365*24*60*60*1000).toUTCString();
+    document.cookie = 'flp_state=' + encodeURIComponent(JSON.stringify(s)) + '; expires=' + exp + '; path=/';
+  } catch(e) {}
+}
+// ── (end state) ──────────────────────────────────────────────────────────────
+
+
+
+function getStartDay() {
+  return '2026-04-28';
+}
+
+function getTodayDayIndex() {
+  const start = new Date(getStartDay());
+  const today = new Date();
+  const diff = Math.floor((today - start) / 86400000);
+  return Math.min(Math.max(diff, 0), 55);
+}
+
+let currentDayIndex = getTodayDayIndex();
+
+// ── RENDER DATE STRIP ────────────────────────────────────────────────────────
+
+function renderDateStrip() {
+  const strip = document.getElementById('dateStrip');
+  strip.innerHTML = '';
+  const todayIdx = getTodayDayIndex();
+  for (let i = 0; i < 56; i++) {
+    const chip = document.createElement('div');
+    const weekNum = Math.floor(i / 7) + 1;
+    const dayNum = (i % 7) + 1;
+    const state = getState();
+    const isDone = state['day_done_' + i];
+    const isMissed = !isDone && i < todayIdx; // past day, not completed
+    const isToday = i === todayIdx;
+    const isCurrent = i === currentDayIndex;
+    chip.className = 'date-chip' +
+      (isCurrent ? ' active' : '') +
+      (isDone ? ' done-chip' : '') +
+      (isMissed ? ' missed-chip' : '') +
+      (isToday ? ' today-chip' : '');
+    chip.innerHTML = `<div class="dc-day">W${weekNum}D${dayNum}</div><div class="dc-num">${i+1}</div>`;
+    chip.onclick = () => { currentDayIndex = i; renderAll(); };
+    strip.appendChild(chip);
+  }
+  // scroll to current
+  const chips = strip.querySelectorAll('.date-chip');
+  if (chips[currentDayIndex]) {
+    chips[currentDayIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+}
+
+// ── RENDER DAY VIEW ──────────────────────────────────────────────────────────
+
+function renderDayView() {
+  const i = currentDayIndex;
+  const type = SCHEDULE[i];
+  const w = WORKOUTS[type];
+  const state = getState();
+  const isDone = !!state['day_done_' + i];
+  const isMissed = !isDone && i < getTodayDayIndex();
+  const weekNum = Math.floor(i / 7) + 1;
+  const dayOfWeek = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i % 7];
+  const isToday = i === getTodayDayIndex();
+  const isSunday = (i % 7) === 6;
+
+  let html = `
+  <div class="day-hero">
+    <div class="day-type-badge ${isMissed ? 'badge-missed' : w.color}">${isMissed ? '—' : w.icon} ${isMissed ? 'Missed' : w.label}</div>
+    <div class="day-title">Day ${i+1}${isToday ? ' <span style="font-size:18px;color:var(--accent);vertical-align:middle">← Today</span>' : ''}</div>
+    <div class="day-subtitle">Week ${weekNum} · ${dayOfWeek} · ${isMissed ? 'This day passed without a check-in' : w.subtitle}</div>
+    <div class="day-meta">
+      <div class="meta-pill"><strong style="color:var(--accent)">2,050</strong><span>Cal Target</span></div>
+      <div class="meta-pill"><strong>155g</strong><span>Protein</span></div>
+      <div class="meta-pill"><strong>${w.duration}</strong><span>Session</span></div>
+      ${isDone ? '<div class="meta-pill"><strong style="color:var(--accent3)">✓ Done</strong><span>Completed</span></div>' : ''}
+      ${isMissed ? '<div class="meta-pill"><strong style="color:#aaa">✗ Missed</strong><span>Skipped</span></div>' : ''}
+    </div>
+  </div>
+  <div class="content">
+  ${isMissed ? `
+  <div class="warn-box" style="margin-bottom:16px">⚠️
+    <div><strong>This day passed without a check-in.</strong> It stays marked missed — that's accurate. You can still log it below if you actually did the work and forgot to check in. Don't backdate if you skipped it; that only hides your real adherence rate.</div>
+  </div>
+  <button class="complete-btn" style="margin-bottom:24px;background:#555" onclick="completeDay(${i})">Log Day ${i+1} Retroactively</button>
+  ` : ''}`;
+
+  // ── WORKOUT SECTION ──
+  if (type === 'S' || type === 'B') {
+    html += `
+    <div class="check-section">
+      <div class="check-section-label"><span>💪 Workout — ${w.duration}</span></div>
+      <div class="tip-box">⏱️ <div><strong>Today's structure:</strong> 5 min warmup (jumping jacks + arm circles + leg swings) → ${w.exercises.length} exercises below → 5 min cooldown stretch.</div></div>`;
+
+    for (let ei = 0; ei < w.exercises.length; ei++) {
+      const ex = w.exercises[ei];
+      const setsDone = state[`ex_${i}_${ei}`] || 0;
+      const allDone = setsDone >= ex.setCount;
+      html += `
+      <div class="ex-expand ${allDone ? 'checked-ex' : ''}" id="ex_${ei}">
+        <div class="ex-header" onclick="toggleEx(${ei})">
+          <div class="ex-num-badge" style="${allDone ? 'background:var(--accent3)' : ''}">${ei+1}</div>
+          <div class="ex-hcontent">
+            <div class="ex-hname">${ex.name}</div>
+            <div class="ex-hsets">${ex.sets} ${allDone ? '· ✓ done' : ''}</div>
+          </div>
+          <div class="ex-arrow">▼</div>
+        </div>
+        <div class="ex-body" id="exbody_${ei}">
+          <p style="margin-bottom:10px">${ex.detail}</p>
+          <div class="ex-done-row">
+            ${Array.from({length:ex.setCount},(_,si) => `<button class="set-btn ${si < setsDone ? 'done' : ''}" onclick="markSet(${i},${ei},${si+1},${ex.setCount},event)">Set ${si+1}</button>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+
+  } else if (type === 'C') {
+    html += `
+    <div class="check-section">
+      <div class="check-section-label"><span>🏃 Cardio — Choose One</span></div>`;
+    for (let oi = 0; oi < w.options.length; oi++) {
+      const opt = w.options[oi];
+      const done = !!state[`cardio_${i}_${oi}`];
+      html += `
+      <div class="check-item ${done ? 'checked' : ''}" onclick="toggleCardio(${i},${oi})">
+        <div class="ci-box">${done ? '✓' : ''}</div>
+        <div class="ci-content">
+          <div class="ci-title">${opt.name}</div>
+          <div class="ci-detail">${opt.detail}</div>
+        </div>
+      </div>`;
+    }
+    html += `<div class="warn-box">⚠️ <div>HIIT is effective but stressful. If legs are sore from yesterday's strength session, do the brisk walk instead. Soreness + HIIT = injury risk at 46+.</div></div>`;
+    html += `</div>`;
+
+  } else if (type === 'W') {
+    html += `
+    <div class="check-section">
+      <div class="check-section-label"><span>🚶 Active Recovery — Choose One</span></div>
+      <div class="tip-box">💡 <div>${w.tip}</div></div>`;
+    for (let oi = 0; oi < w.options.length; oi++) {
+      const opt = w.options[oi];
+      const done = !!state[`walk_${i}_${oi}`];
+      html += `
+      <div class="check-item ${done ? 'checked' : ''}" onclick="toggleWalk(${i},${oi})">
+        <div class="ci-box">${done ? '✓' : ''}</div>
+        <div class="ci-content">
+          <div class="ci-title">${opt.name}</div>
+          <div class="ci-detail">${opt.detail}</div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+
+  } else { // REST
+    html += `
+    <div class="check-section">
+      <div class="check-section-label"><span>💤 Rest Day</span></div>
+      <div class="tip-box">⚡ <div><strong>Why rest matters at 46+:</strong> Muscle repair, testosterone production, and cortisol regulation all happen during recovery — not during the workout. Skipping rest days does not accelerate results. It delays them.</div></div>
+      <div class="check-item">
+        <div class="ci-box" style="border-color:var(--accent3);color:var(--accent3)">✓</div>
+        <div class="ci-content">
+          <div class="ci-title">No structured exercise today</div>
+          <div class="ci-detail">A short walk (15–20 min) is fine if you want to move. Nothing more.</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── NUTRITION ──
+  html += `
+  <div class="check-section">
+    <div class="check-section-label"><span>🍽️ Today's Nutrition</span></div>
+    <div class="totals-bar">
+      <div class="total-item"><div class="total-val">2,050</div><div class="total-lbl">Calories</div></div>
+      <div class="total-item"><div class="total-val" style="color:#ffaa88">155g</div><div class="total-lbl">Protein</div></div>
+      <div class="total-item"><div class="total-val">230g</div><div class="total-lbl">Carbs</div></div>
+      <div class="total-item"><div class="total-val">57g</div><div class="total-lbl">Fat</div></div>
+    </div>`;
+
+  MEALS.forEach((m, mi) => {
+    html += `
+    <div class="meal-card">
+      <div class="meal-time">${m.time}</div>
+      <div class="meal-name">${m.name}</div>
+      <div class="meal-desc">${m.desc}<br><span style="color:var(--ink3);font-size:11px">Alt: ${m.alt}</span></div>
+      <div class="meal-macros-row">
+        <span class="mmacro">${m.cal} cal</span>
+        <span class="mmacro prot">${m.protein}g protein</span>
+        <span class="mmacro">${m.carbs}g carbs</span>
+        <span class="mmacro">${m.fat}g fat</span>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ── DAILY HABITS ──
+  html += `
+  <div class="check-section">
+    <div class="check-section-label">
+      <span>✅ Daily Habits</span>
+      <span class="cs-count" id="habitCount">0/${DAILY_HABITS.length}</span>
+    </div>`;
+  DAILY_HABITS.forEach((h, hi) => {
+    const done = !!state[`habit_${i}_${hi}`];
+    html += `
+    <div class="check-item ${done ? 'checked' : ''}" onclick="toggleHabit(${i},${hi})">
+      <div class="ci-box">${done ? '✓' : ''}</div>
+      <div class="ci-content">
+        <div class="ci-title">${h.title}</div>
+        <div class="ci-detail">${h.detail}</div>
+      </div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ── WEEKLY CHECK (every Sunday) ──
+  if (isSunday) {
+    html += `
+    <div class="check-section">
+      <div class="check-section-label"><span>📏 Weekly Check-in (Week ${weekNum} End)</span></div>
+      <div class="warn-box">⚠️ <div>If average weight dropped less than 0.5 lbs this week, cut 100 calories. If it dropped more than 1.5 lbs, add 150 calories — you may be losing muscle.</div></div>`;
+    WEEKLY_CHECK.forEach((wc, wi) => {
+      const done = !!state[`weekly_${i}_${wi}`];
+      html += `
+      <div class="check-item ${done ? 'checked' : ''}" onclick="toggleWeekly(${i},${wi})">
+        <div class="ci-box">${done ? '✓' : ''}</div>
+        <div class="ci-content">
+          <div class="ci-title">${wc.title}</div>
+          <div class="ci-detail">${wc.detail}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ── COMPLETE BUTTON ──
+  html += `
+  <button class="complete-btn ${isDone ? 'completed' : ''}" onclick="completeDay(${i})" ${isDone || isMissed ? 'disabled' : ''} style="${isMissed ? 'display:none' : ''}">
+    ${isDone ? '✓ Day ' + (i+1) + ' Complete' : 'Mark Day ' + (i+1) + ' Complete'}
+  </button>
+  </div>`;
+
+  document.getElementById('dayView').innerHTML = html;
+  updateHabitCount(i);
+}
+
+// ── INTERACTIONS ─────────────────────────────────────────────────────────────
+
+function toggleEx(ei) {
+  const el = document.getElementById('ex_' + ei);
+  const body = document.getElementById('exbody_' + ei);
+  el.classList.toggle('open');
+  body.style.display = el.classList.contains('open') ? 'block' : 'none';
+}
+
+function markSet(dayI, exI, setNum, total, e) {
+  e.stopPropagation();
+  const state = getState();
+  const key = `ex_${dayI}_${exI}`;
+  const current = state[key] || 0;
+  state[key] = setNum > current ? setNum : setNum - 1;
+  if (state[key] < 0) state[key] = 0;
+  saveState(state);
+  renderDayView();
+  // re-open the exercise
+  const el = document.getElementById('ex_' + exI);
+  const body = document.getElementById('exbody_' + exI);
+  if (el && body) { el.classList.add('open'); body.style.display = 'block'; }
+}
+
+function toggleCardio(dayI, optI) {
+  const state = getState();
+  const key = `cardio_${dayI}_${optI}`;
+  state[key] = !state[key];
+  saveState(state);
+  renderDayView();
+}
+
+function toggleWalk(dayI, optI) {
+  const state = getState();
+  const key = `walk_${dayI}_${optI}`;
+  state[key] = !state[key];
+  saveState(state);
+  renderDayView();
+}
+
+function toggleHabit(dayI, hi) {
+  const state = getState();
+  const key = `habit_${dayI}_${hi}`;
+  state[key] = !state[key];
+  saveState(state);
+  // Update just the habit item
+  const items = document.querySelectorAll('.check-item');
+  renderDayView();
+}
+
+function toggleWeekly(dayI, wi) {
+  const state = getState();
+  const key = `weekly_${dayI}_${wi}`;
+  state[key] = !state[key];
+  saveState(state);
+  renderDayView();
+}
+
+function updateHabitCount(dayI) {
+  const state = getState();
+  const done = DAILY_HABITS.filter((_, hi) => state[`habit_${dayI}_${hi}`]).length;
+  const el = document.getElementById('habitCount');
+  if (el) el.textContent = `${done}/${DAILY_HABITS.length}`;
+}
+
+function completeDay(dayI) {
+  const state = getState();
+  state['day_done_' + dayI] = true;
+  saveState(state);
+  renderAll();
+}
+
+function updateTopBar() {
+  const state = getState();
+  const todayIdx = getTodayDayIndex();
+  const doneCount = Object.keys(state).filter(k => k.startsWith('day_done_') && state[k]).length;
+  const missedCount = Array.from({length: todayIdx}, (_,i) => i).filter(i => !state['day_done_' + i]).length;
+  const pct = Math.round((doneCount / 56) * 100);
+  document.getElementById('topProg').style.width = pct + '%';
+  document.getElementById('topbarDay').textContent = missedCount > 0
+    ? `Day ${currentDayIndex + 1} · ${missedCount} missed`
+    : `Day ${currentDayIndex + 1} of 56`;
+}
+
+function renderAll() {
+  renderDateStrip();
+  renderDayView();
+  updateTopBar();
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init() {
+  try { renderAll(); } catch(e) {
+    document.body.innerHTML = '<div style="padding:40px;font-family:sans-serif;color:#333"><h2>Loading error</h2><p style="margin-top:12px;color:#666">' + e.message + '</p></div>';
+  }
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
